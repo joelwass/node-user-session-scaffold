@@ -14,15 +14,18 @@ module.exports = (sequelize, DataTypes) => {
     },
     completed: {
       type: DataTypes.BOOLEAN,
-      required: true
+      required: true,
+      defaultValue: false
     },
     paid: {
       type: DataTypes.BOOLEAN,
-      required: true
+      required: true,
+      defaultValue: false
     },
     shipped: {
       type: DataTypes.BOOLEAN,
-      required: true
+      required: true,
+      defaultValue: false
     },
     price: {
       type: DataTypes.STRING,
@@ -35,6 +38,21 @@ module.exports = (sequelize, DataTypes) => {
     price_cents: {
       type: DataTypes.INTEGER,
       required: true
+    },
+    discount: {
+      type: DataTypes.STRING,
+      required: true,
+      defaultValue: '0.00'
+    },
+    discount_dollars: {
+      type: DataTypes.INTEGER,
+      required: true,
+      defaultValue: 0
+    },
+    discount_cents: {
+      type: DataTypes.INTEGER,
+      required: true,
+      defaultValue: 0
     },
     createdAt: {
       type: DataTypes.DATE,

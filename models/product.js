@@ -31,17 +31,24 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       required: true
     },
-    discount: {
+    color: {
       type: DataTypes.STRING,
       required: true
     },
+    discount: {
+      type: DataTypes.STRING,
+      required: true,
+      defaultValue: '0.00'
+    },
     discount_dollars: {
       type: DataTypes.INTEGER,
-      required: true
+      required: true,
+      defaultValue: 0
     },
     discount_cents: {
       type: DataTypes.INTEGER,
-      required: true
+      required: true,
+      defaultValue: 0
     },
     createdAt: {
       type: DataTypes.DATE,
