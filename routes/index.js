@@ -10,6 +10,20 @@ router.post('/user/login', controllers.authController.loginUser)
 router.post('/user/logout', controllers.authController.logoutUser)
 router.post('/user/resume', controllers.authController.authenticateSessionId, controllers.authController.resume)
 
+// product routes
+router.route('/product/:id?')
+  .post(controllers.productController.createProduct)
+  .put(controllers.productController.updateProduct)
+  .get(controllers.productController.getProducts)
+  .delete(controllers.productController.deleteProduct)
+
+// order routes
+router.route('/order/:id?')
+  .post(controllers.orderController.createOrder)
+  .put(controllers.orderController.updateOrder)
+  .get(controllers.orderController.getOrders)
+  .delete(controllers.orderController.deleteOrder)
+
 // user routes
 router.route('/user/:email?')
   .post(controllers.userController.createUser)

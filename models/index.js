@@ -5,7 +5,7 @@ const fs = require('fs')
 const host = (typeof process.env.MYSQL_HOST === 'undefined') ? 'localhost' : process.env.MYSQL_HOST
 const username = (typeof process.env.MYSQL_USERNAME === 'undefined') ? 'root' : process.env.MYSQL_USERNAME
 const password = (typeof process.env.MYSQL_PASSWORD === 'undefined') ? '' : process.env.MYSQL_PASSWORD
-const database = (typeof process.env.MYSQL_DB === 'undefined') ? 'recommend' : process.env.MYSQL_DB
+const database = (typeof process.env.MYSQL_DB === 'undefined') ? 'slypers' : process.env.MYSQL_DB
 
 const connection = new Sequelize(database, username, password, {
   host,
@@ -22,7 +22,7 @@ let db = {}
 fs.readdirSync(__dirname).filter(file => {
   return (file.indexOf('.') !== 0) && (file !== 'index.js')
 }).forEach(file => {
-  let model = connection.import(path.join('../', __dirname, file))
+  let model = connection.import(path.join(__dirname, file))
   db[model.name] = model
 })
 
