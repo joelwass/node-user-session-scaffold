@@ -5,38 +5,37 @@ const controllers = require('../controllers')
 // health
 router.get('/health', (req, res) => res.status(200).json({ alive: true }))
 
-// get basic auth
-router.get('/auth', controllers.auth.basic);
-
-// get jwt auth
-router.post('/auth', controllers.auth.jwt);
+// create new session
+router.post('/auth', controllers.customerAuthController.createAuth);
 
 // user auth
-router.post('/user/login', controllers.authController.loginUser)
-router.post('/user/logout', controllers.authController.logoutUser)
-router.post('/user/resume', controllers.authController.authenticateSessionId, controllers.authController.resume)
+router.post('/user/login', controllers.adminUserAuthController.loginUser)
+router.post('/user/logout', controllers.adminUserAuthController.logoutUser)
+router.post('/user/resume', controllers.adminUserAuthController.authenticateSessionId, controllers.adminUserAuthController.resume)
 
 // product routes
 router.route('/product/:id?')
-  .post(controllers.productController.createProduct)
-  .put(controllers.productController.updateProduct)
-  .get(controllers.productController.getProducts)
-  .delete(controllers.productController.deleteProduct)
+  .post(controllers.adminUserAuthController.authenticateSessionId, controllers.productController.createProduct)
+  .put(controllers.adminUserAuthController.authenticateSessionId, controllers.productController.updateProduct)
+  .get(controllers.adminUserAuthController.authenticateSessionId,controllers.productController.getProducts)
+  .delete(controllers.adminUserAuthController.authenticateSessionId,controllers.productController.deleteProduct)
 
 // order routes
 router.route('/order/:id?')
-  .post(controllers.orderController.createOrder)
-  .put(controllers.orderController.updateOrder)
-  .get(controllers.orderController.getOrders)
-  .delete(controllers.orderController.deleteOrder)
+  .post(controllers.customerAuthController.authenticateSessionId, controllers.orderController.createOrder)
+  .put(controllers.customerAuthController.authenticateSessionId, controllers.orderController.updateOrder)
+  .get(controllers.customerAuthController.authenticateSessionId, controllers.orderController.getOrders)
+  .delete(controllers.customerAuthController.authenticateSessionId, controllers.orderController.deleteOrder)
+
+router.post('/order/resume', controllers.customerAuthController.authenticateSessionId, controllers.customerAuthController.resume)
 
 // user routes
 router.route('/user/:email?')
   .post(controllers.userController.createUser)
-  .get(controllers.authController.authenticateSessionId, controllers.userController.getUser)
-  .put(controllers.authController.authenticateSessionId, controllers.userController.updateUser)
-  .delete(controllers.authController.authenticateSessionId, controllers.userController.deleteUser)
+  .get(controllers.adminUserAuthController.authenticateSessionId, controllers.userController.getUser)
+  .put(controllers.adminUserAuthController.authenticateSessionId, controllers.userController.updateUser)
+  .delete(controllers.adminUserAuthController.authenticateSessionId, controllers.userController.deleteUser)
 
-router.get('/users', controllers.authController.authenticateSessionId, controllers.userController.getUsers)
+router.get('/users', controllers.adminUserAuthController.authenticateSessionId, controllers.userController.getUsers)
 
 module.exports = router
