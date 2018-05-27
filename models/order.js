@@ -1,4 +1,5 @@
 const constants = require('../helper/constants')
+const customer = require('./customer')
 
 module.exports = (sequelize, DataTypes) => {
   const Order = sequelize.define('Order', {
@@ -11,6 +12,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.JSON,
       required: true,
       defaultValue: {}
+    },
+    customerId: {
+      type: DataTypes.STRING,
+      required: false
     },
     completed: {
       type: DataTypes.BOOLEAN,
@@ -76,43 +81,7 @@ module.exports = (sequelize, DataTypes) => {
         unique: true,
         fields: ['id']
       }
-    ],
-    hooks: {
-      // afterUpdate: (recommendation, options) => {
-      //   // figure out of the recommendation was correct or not
-      //   const correctRecommendation = recommendation.prediction === recommendation.result
-      //   // find the to_user and update the to_users recommendationsReceivedCorrect field and the from_users recomendation correct field
-      //   sequelize.models.User.findOne({ where: { id: recommendation.to_user } })
-      //     .then(user => {
-      //       if (correctRecommendation) user.recommendationsReceivedCorrect++
-      //       return user.save()
-      //     })
-      //     .then(() => sequelize.models.User.findOne({ where: { id: recommendation.from_user } }))
-      //     .then(user => {
-      //       if (correctRecommendation) user.recommendationsGivenCorrect++
-      //       return user.save()
-      //     })
-      //     .catch(err => {
-      //       return Promise.reject(err)
-      //     })
-      // },
-      // beforeCreate: (recommendation, options) => {
-      //   // update the from_users recommendations_given field and the to_users recommendations received field
-      //   sequelize.models.User.findOne({ where: { id: recommendation.to_user } })
-      //     .then(user => {
-      //       user.recommendationsReceived++
-      //       return user.save()
-      //     })
-      //     .then(() => sequelize.models.User.findOne({ where: { id: recommendation.from_user } }))
-      //     .then(user => {
-      //       user.recommendationsGiven++
-      //       return user.save()
-      //     })
-      //     .catch(err => {
-      //       return Promise.reject(err)
-      //     })
-      // }
-    }
+    ]
   })
 
   return Order

@@ -31,7 +31,7 @@ module.exports = {
         })
         return Order.save()
       })
-      .then(updatedOrder => res.status(200).json({ success: true, message: helper.strings.OrderUpdatedSuccesfully, Order: updatedOrder }))
+      .then(updatedOrder => res.status(200).json({ success: true, message: helper.strings.OrderUpdatedSuccesfully, order: updatedOrder }))
       .catch(err => {
         helper.methods.handleErrors(err, res)
       })
@@ -43,7 +43,7 @@ module.exports = {
     // an id was passed in
     if (params.id) {
       sqlModels.Order.findOne({ where: { id: params.id } })
-      .then(Order => res.status(200).json({ success: true, Order }))
+      .then(order => res.status(200).json({ success: true, order }))
       .catch(err => {
         helper.methods.handleErrors(err, res)
       })
@@ -51,7 +51,7 @@ module.exports = {
     // no id was passed in, get all Orders
     } else {
       sqlModels.Order.findAll()
-      .then(Orders => res.status(200).json({ success: true, Orders }))
+      .then(orders => res.status(200).json({ success: true, orders }))
       .catch(err => {
         helper.methods.handleErrors(err, res)
       })
@@ -63,7 +63,7 @@ module.exports = {
     if (!params.id) return res.status(200).json({ success: false, message: helper.strings.invalidParameters })
 
     sqlModels.Order.findOne({ where: { id: params.id } })
-      .then(Order => Order.destroy())
+      .then(order => order.destroy())
       .then(() => {
         return res.status(200).json({ success: true, message: helper.strings.OrderSuccessfullyDeleted })
       })

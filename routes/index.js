@@ -5,7 +5,13 @@ const controllers = require('../controllers')
 // health
 router.get('/health', (req, res) => res.status(200).json({ alive: true }))
 
-// auth
+// get basic auth
+router.get('/auth', controllers.auth.basic);
+
+// get jwt auth
+router.post('/auth', controllers.auth.jwt);
+
+// user auth
 router.post('/user/login', controllers.authController.loginUser)
 router.post('/user/logout', controllers.authController.logoutUser)
 router.post('/user/resume', controllers.authController.authenticateSessionId, controllers.authController.resume)

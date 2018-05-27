@@ -32,7 +32,7 @@ module.exports = {
   },
   updateUser: (req, res) => {
     // validate params, email is required but all else are optional
-    const params = pluck(['email', 'password', 'firstName', 'lastName', 'birthday', 'recommendationsGiven', 'recommendationsReceived', 'recommendationsGivenCorrect', 'recommendationsReceivedCorrect', 'meta'], req.body).end()
+    const params = pluck(['email', 'password', 'firstName', 'lastName', 'birthday', 'meta'], req.body).end()
     if (!params.email) return res.status(200).json({ success: false, message: helper.strings.invalidParameters })
 
     // convert birthday
@@ -62,31 +62,25 @@ module.exports = {
       })
   },
   getUsers: (req, res) => {
-    sqlModels.User.findAll()
-      .then(users => {
-        // iterate over all users and remove password field
-        const returnUsers = users.map(user => pluck(['id', 'firstName', 'lastName'], user.toJSON()).end())
-
-        return res.status(200).json({ success: true, users: returnUsers })
-      })
+    // validate params. if we have a user id passed in then we will retrieve one user, otherwise we'll retrieve all
+    const params = pluck(['id'], req.params).end()
+    
+    // an id was passed in
+    if (params.id) {
+      sqlModels.User.findOne({ where: { id: params.id } })
+      .then(user => res.status(200).json({ success: true, user }))
       .catch(err => {
         helper.methods.handleErrors(err, res)
       })
-  },
-  getUser: (req, res) => {
-    // validate params, must have email in the query string
-    const params = pluck(['email'], req.params).end()
-    if (!params.email) return res.status(200).json({ success: false, message: helper.strings.invalidParameters })
 
-    sqlModels.User.findOne({ where: { email: params.email } })
-      .then(user => {
-        const returnUser = user.toJSON()
-        delete returnUser.password
-        return res.status(200).json({ success: true, user: returnUser })
-      })
+    // no id was passed in, get all users
+    } else {
+      sqlModels.User.findAll()
+      .then(users => res.status(200).json({ success: true, users }))
       .catch(err => {
         helper.methods.handleErrors(err, res)
       })
+    }
   },
   deleteUser: (req, res) => {
     // validate params, must have an email passed in
