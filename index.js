@@ -7,7 +7,7 @@ const routes = require('./routes')
 
 const app = express()
 const host = process.env.HOST || '127.0.0.1'
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 3001
 
 app.set('port', port)
 
@@ -22,7 +22,7 @@ const dev = process.env.NODE_ENV !== 'production';
 
     app.use('/api/v1', routes)
     
-    await sqlModel.sequelize.sync()
+    await sqlModel.sequelize.sync({ force: true })
 
     // error handler
     app.use((err, req, res, next) => {
@@ -34,7 +34,7 @@ const dev = process.env.NODE_ENV !== 'production';
     
     app.listen(port, (err) => {
       if (err) throw err
-      console.log('> Ready on http://localhost:3000')
+      console.log('> Ready on http://localhost:' + port)
     })  
   } catch (err) {
     console.error(err.stack)

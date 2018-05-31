@@ -46,17 +46,14 @@ module.exports = (sequelize, DataTypes) => {
     },
     discount: {
       type: DataTypes.STRING,
-      required: true,
       defaultValue: '0.00'
     },
     discount_dollars: {
       type: DataTypes.INTEGER,
-      required: true,
       defaultValue: 0
     },
     discount_cents: {
       type: DataTypes.INTEGER,
-      required: true,
       defaultValue: 0
     },
     createdAt: {

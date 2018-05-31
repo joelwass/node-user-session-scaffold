@@ -17,7 +17,7 @@ router.post('/user/resume', controllers.adminUserAuthController.authenticateSess
 router.route('/product/:id?')
   .post(controllers.adminUserAuthController.authenticateSessionId, controllers.productController.createProduct)
   .put(controllers.adminUserAuthController.authenticateSessionId, controllers.productController.updateProduct)
-  .get(controllers.adminUserAuthController.authenticateSessionId,controllers.productController.getProducts)
+  .get(controllers.customerAuthController.authenticateSessionId,controllers.productController.getProducts)
   .delete(controllers.adminUserAuthController.authenticateSessionId,controllers.productController.deleteProduct)
 
 // order routes
@@ -32,7 +32,7 @@ router.post('/order/resume', controllers.customerAuthController.authenticateSess
 // user routes
 router.route('/user/:email?')
   .post(controllers.userController.createUser)
-  .get(controllers.adminUserAuthController.authenticateSessionId, controllers.userController.getUser)
+  .get(controllers.adminUserAuthController.authenticateSessionId, controllers.userController.getUsers)
   .put(controllers.adminUserAuthController.authenticateSessionId, controllers.userController.updateUser)
   .delete(controllers.adminUserAuthController.authenticateSessionId, controllers.userController.deleteUser)
 

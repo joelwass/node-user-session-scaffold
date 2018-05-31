@@ -50,7 +50,7 @@ module.exports = {
         }
 
         // return order id
-        return res.status(200).json({ success: true, orderId: newOrder.id })
+        return res.status(200).json({ success: true, orderId: newOrder.id, sessionId })
       })
       .catch(err => {
         helper.methods.handleErrors(err, res)
