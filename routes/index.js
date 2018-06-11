@@ -8,10 +8,18 @@ router.get('/health', (req, res) => res.status(200).json({ alive: true }))
 // create new session
 router.post('/auth', controllers.customerAuthController.createAuth);
 
+// subscribe for emails
+router.post('/signUpForEmails', controllers.newsletterController.signUpUser)
+
 // user auth
 router.post('/user/login', controllers.adminUserAuthController.loginUser)
 router.post('/user/logout', controllers.adminUserAuthController.logoutUser)
 router.post('/user/resume', controllers.adminUserAuthController.authenticateSessionId, controllers.adminUserAuthController.resume)
+
+// customer auth
+router.post('/customer/login', controllers.customerAuthController.loginUser)
+router.post('/customer/logout', controllers.customerAuthController.logoutUser)
+router.post('/customer/resume', controllers.customerAuthController.authenticateSessionId, controllers.customerAuthController.resume)
 
 // product routes
 router.route('/product/:id?')

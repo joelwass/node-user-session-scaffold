@@ -12,6 +12,10 @@ module.exports = (sequelize, DataTypes) => {
       required: true,
       unique: true
     },
+    password: {
+      type: DataTypes.STRING,
+      required: true
+    },
     firstName: {
       type: DataTypes.STRING,
       required: true
@@ -63,6 +67,23 @@ module.exports = (sequelize, DataTypes) => {
       }
     ]
   })
+
+  Customer.authenticate = body => {
+    let user
+    return Customer.findOne({ where: { email: body.email } })
+      .then(localUser => {
+        if (!localUser) return Promise.reject(new helper.CustomError(helper.strings.sorryWeCantFindEmail))
+        user = localUser
+        return bcrypt.compare(body.password, user.password)
+      })
+      .then(result => {
+        if (!result) return Promise.reject(new helper.CustomError(helper.strings.passwordInvalid))
+        return Promise.resolve(user)
+      })
+      .catch(err => {
+        return Promise.reject(err)
+      })
+  }
 
   return Customer
 }

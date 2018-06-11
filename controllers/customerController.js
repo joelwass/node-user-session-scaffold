@@ -23,7 +23,7 @@ module.exports = {
   },
   updateCustomer: (req, res) => {
     // validate params, email is required but all else are optional
-    const params = pluck(['email', 'firstName', 'lastName', 'birthday', 'address', 'address2', 'city', 'state', 'zip', 'meta'], req.body).end()
+    const params = pluck(['email', 'password', 'firstName', 'lastName', 'birthday', 'address', 'address2', 'city', 'state', 'zip', 'meta'], req.body).end()
     if (!params.email) return res.status(200).json({ success: false, message: helper.strings.invalidParameters })
 
     // convert birthday

@@ -56,22 +56,60 @@ module.exports = {
         helper.methods.handleErrors(err, res)
       })
   },
+  loginUser: (req, res) => {
+    // validate params, email and password is required
+    const params = pluck(['email', 'password'], req.body).end()
+    if (Object.keys(params).length !== 2) return res.status(200).json({ success: false, message: helper.strings.invalidParameters })
+
+    // try logging in
+    sqlModels.Customer.authenticate(params)
+      .then(authenticatedUser => {
+        // we know the user authenticated correctly if they make it into this block
+        const sessionId = ulid()
+        // declare users session
+        redis[sessionId] = {
+          userId: authenticatedUser.id,
+          expiresAt: Date.now() + twoHoursInMilliseconds
+        }
+
+        const jsonUser = authenticatedUser.toJSON()
+        delete jsonUser.password
+        delete jsonUser.createdAt
+        delete jsonUser.updatedAt
+
+        // return session id
+        return res.status(200).json({ success: true, sessionId, user: jsonUser })
+      })
+      .catch(err => {
+        helper.methods.handleErrors(err, res)
+      })
+  },
+  logoutUser: (req, res) => {
+    // nuke the session and return 200
+    delete redis[req.authToken]
+    return res.status(200).json({ success: true })
+  },
   resume: (req, res) => {
-    const orderId = redis[req.authToken].userId
-    sqlModels.Order.findById(orderId)
-      .then(foundOrder => {
+    const userId = redis[req.authToken].userId
+    sqlModels.Customer.findById(userId)
+      .then(authenticatedUser => {
         // generate a fresh session id for them
         const sessionId = ulid()
         // save user session
         redis[sessionId] = {
-          orderId: foundOrder.id,
+          userId: authenticatedUser.id,
           expiresAt: Date.now() + twoHoursInMilliseconds
         }
         // delete the old session
         delete redis[req.authToken]
 
+        const jsonUser = authenticatedUser.toJSON()
+        delete jsonUser.password
+        delete jsonUser.createdAt
+        delete jsonUser.updatedAt
+
         // return session id
-        return res.status(200).json({ success: true, orderId: newOrder.id })
+        return res.status(200).json({ success: true, sessionId, user: jsonUser })
       })
       .catch(err => {
         helper.methods.handleErrors(err, res)
