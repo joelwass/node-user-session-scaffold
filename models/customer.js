@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt')
+const helper = require('../helper')
 
 module.exports = (sequelize, DataTypes) => {
   const Customer = sequelize.define('Customer', {
@@ -65,11 +66,37 @@ module.exports = (sequelize, DataTypes) => {
         unique: true,
         fields: ['id']
       }
-    ]
+    ],
+    hooks: {
+      beforeCreate: (customer, options) => {
+        return bcrypt.hash(customer.password, 10)
+          .then(encryptedPassword => {
+            customer.password = encryptedPassword
+          })
+          .catch(err => {
+            return Promise.reject(err)
+          })
+      },
+      beforeUpdate: (customer, options) => {
+        if (!customer.changed('password')) {
+          return
+        }
+
+        return bcrypt.hash(customer.password, 10)
+          .then(encryptedPassword => {
+            customer.password = encryptedPassword
+          })
+          .catch(err => {
+            return Promise.reject(err)
+          })
+      }
+    }
   })
 
   Customer.authenticate = body => {
     let user
+    console.log('')
+    console.log(body)
     return Customer.findOne({ where: { email: body.email } })
       .then(localUser => {
         if (!localUser) return Promise.reject(new helper.CustomError(helper.strings.sorryWeCantFindEmail))

@@ -61,24 +61,32 @@ module.exports = {
     const params = pluck(['email', 'password'], req.body).end()
     if (Object.keys(params).length !== 2) return res.status(200).json({ success: false, message: helper.strings.invalidParameters })
 
-    // try logging in
-    sqlModels.Customer.authenticate(params)
-      .then(authenticatedUser => {
-        // we know the user authenticated correctly if they make it into this block
-        const sessionId = ulid()
-        // declare users session
-        redis[sessionId] = {
-          userId: authenticatedUser.id,
-          expiresAt: Date.now() + twoHoursInMilliseconds
+    sqlModels.Customer.findOne({ where: { email: params.email }})
+      .then(user => {
+        if (!user) return res.status(200).json({ success: false, message: helper.strings.noUserExistingByThatEmail })
+        
+        else {
+          return sqlModels.Customer.authenticate(params).then(authenticatedUser => {
+            // we know the user authenticated correctly if they make it into this block
+            const sessionId = ulid()
+            // declare users session
+            redis[sessionId] = {
+              userId: authenticatedUser.id,
+              expiresAt: Date.now() + twoHoursInMilliseconds
+            }
+
+            const jsonUser = authenticatedUser.toJSON()
+            delete jsonUser.password
+            delete jsonUser.createdAt
+            delete jsonUser.updatedAt
+
+            // return session id
+            return res.status(200).json({ success: true, sessionId, customer: jsonUser })
+          })
+          .catch(err => {
+            helper.methods.handleErrors(err, res)
+          })
         }
-
-        const jsonUser = authenticatedUser.toJSON()
-        delete jsonUser.password
-        delete jsonUser.createdAt
-        delete jsonUser.updatedAt
-
-        // return session id
-        return res.status(200).json({ success: true, sessionId, user: jsonUser })
       })
       .catch(err => {
         helper.methods.handleErrors(err, res)

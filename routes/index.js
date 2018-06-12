@@ -11,6 +11,13 @@ router.post('/auth', controllers.customerAuthController.createAuth);
 // subscribe for emails
 router.post('/signUpForEmails', controllers.newsletterController.signUpUser)
 
+// customer routes
+router.route('/customer/:email?')
+  .post(controllers.customerController.createCustomer)
+  .get(controllers.customerAuthController.authenticateSessionId, controllers.customerController.getCustomers)
+  .put(controllers.customerAuthController.authenticateSessionId, controllers.customerController.updateCustomer)
+  .delete(controllers.customerAuthController.authenticateSessionId, controllers.customerController.deleteCustomer)
+
 // user auth
 router.post('/user/login', controllers.adminUserAuthController.loginUser)
 router.post('/user/logout', controllers.adminUserAuthController.logoutUser)

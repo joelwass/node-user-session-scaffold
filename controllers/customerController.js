@@ -5,13 +5,15 @@ const helper = require('../helper')
 module.exports = {
   createCustomer: (req, res) => {
     // validate params, all required fields
-    const params = pluck(['email'], req.body).end()
-    if (Object.keys(params).length !== 1) return res.status(200).json({ success: false, message: helper.strings.invalidParameters })
+    const params = pluck(['email', 'firstName', 'lastName', 'password'], req.body).end()
+    if (Object.keys(params).length !== 4) return res.status(200).json({ success: false, message: helper.strings.invalidParameters })
 
     return sqlModels.Customer.findOrCreate({ where: { email: params.email }, defaults: params })
       .then(result => {
         const didCreateNewCustomer = result[1]
         const customer = result[0].toJSON()
+
+        delete customer.password
 
         // if the Customer wasn't created new, this will return the old, found Customer with matching email address
         if (!didCreateNewCustomer) return res.status(200).json({ success: false, message: helper.strings.customerAlreadyExists, customer })
