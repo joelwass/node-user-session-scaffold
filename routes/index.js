@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const controllers = require('../controllers')
+const config = require('../config');
 
 // health
 router.get('/health', (req, res) => res.status(200).json({ alive: true }))
@@ -51,6 +52,46 @@ router.route('/user/:email?')
   .put(controllers.adminUserAuthController.authenticateSessionId, controllers.userController.updateUser)
   .delete(controllers.adminUserAuthController.authenticateSessionId, controllers.userController.deleteUser)
 
-router.get('/users', controllers.adminUserAuthController.authenticateSessionId, controllers.userController.getUsers)
+router.get('/config', (req, res) => {
+  res.json({
+    stripePublishableKey: config.stripe.publishableKey,
+    stripeCountry: config.stripe.country,
+    country: config.country,
+    currency: config.currency,
+  })
+})
+
+// STRIPE endpoints
+
+router.post('/stripe/orders', controllers.paymentController.createOrder)
+
+router.get('/stripe/orders/:id', async (req, res) => {
+  try {
+    return res.status(200).json(await controllers.paymentController.retrieveOrder(req.params.id))
+  } catch (err) {
+    return res.sendStatus(404)
+  }
+})
+
+// Retrieve all products.
+router.get('/stripe/products', async (req, res) => {
+  const productList = await controllers.paymentController.listProducts()
+  // Check if products exist on Stripe Account.
+  if (controllers.paymentController.productsExist(productList)) {
+    res.json(productList)
+  } else {
+    // We need to set up the products.
+    await setup.run()
+    res.json(await controllers.paymentController.listProducts())
+  }
+});
+
+// Retrieve a product by ID.
+router.get('/stripe/products/:id', async (req, res) => {
+  res.json(await controllers.paymentController.retrieveProduct(req.params.id));
+});
+
+// Complete payment for an order using a source.
+router.post('/stripe/orders/:id/pay', controllers.paymentController.pay)
 
 module.exports = router
