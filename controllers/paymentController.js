@@ -78,6 +78,7 @@ const pay = async (req, res, next) => {
 // Create an order.
 const createOrder = async (req, res, next) => {
   let { items, email, shipping } = req.body;
+  console.log(req.body)
   try {
     const order = await stripe.orders.create({
       currency: 'USD',
@@ -88,9 +89,11 @@ const createOrder = async (req, res, next) => {
         status: 'created',
       },
     })
-    return res.status(200).json({order});
+    console.log(order)
+    return res.status(200).json({ success: true, order});
   } catch (err) {
-    return res.status(500).json({error: err.message});
+    console.log('err', err)
+    return res.status(500).json({ success: false, message: err.message});
   }
 }
 
