@@ -21,7 +21,7 @@ const pay = async (req, res, next) => {
   console.log(source)
   try {
     // Retrieve the order associated to the ID.
-    let order = await retrieveProduct(req.params.id)
+    let order = await retrieveOrder(req.params.id)
     console.log('')
     console.log('order')
     console.log(order)
@@ -33,7 +33,7 @@ const pay = async (req, res, next) => {
       return res.status(403).json({order, source})
     }
     // Dynamically evaluate if 3D Secure should be used.
-    if (source && source.type === 'card') {
+    if (source && source.type === 'card' && source.livemode) {
       // A 3D Secure source may be created referencing the card source.
       source = await dynamic3DS(source, order, req)
     }
@@ -41,6 +41,9 @@ const pay = async (req, res, next) => {
     if (source.type === 'card' && !source.livemode) {
       source.id = 'tok_visa'
     }
+    console.log('')
+    console.log('new source')
+    console.log(source)
     // Pay the order using the Stripe source.
     if (source && source.status === 'chargeable') {
       let charge, status
@@ -63,6 +66,8 @@ const pay = async (req, res, next) => {
         // For the demo we simply set to failed.
         status = 'failed'
       }
+      console.log('')
+      console.log(charge)
       if (charge && charge.status === 'succeeded') {
         status = 'paid'
       } else if (charge) {
@@ -82,7 +87,7 @@ const pay = async (req, res, next) => {
 
 // Create an order.
 const createOrder = async (req, res, next) => {
-  let { items, email, shipping } = req.body;
+  let { items, email, shipping } = req.body
   try {
     const order = await stripe.orders.create({
       currency: 'USD',
@@ -94,10 +99,10 @@ const createOrder = async (req, res, next) => {
       },
     })
     // console.log(order)
-    return res.status(200).json({ success: true, order});
+    return res.status(200).json({ success: true, order})
   } catch (err) {
     console.log('err', err)
-    return res.status(500).json({ success: false, message: err.message});
+    return res.status(500).json({ success: false, message: err.message})
   }
 }
 
@@ -113,25 +118,47 @@ const updateOrder = async (orderId, properties) => {
 
 // List all products.
 const listProducts = async () => {
-  return await stripe.products.list({limit: 3, type: 'good'});
-};
+  return await stripe.products.list({limit: 3, type: 'good'})
+}
 
 // Retrieve a product by ID.
 const retrieveProduct = async productId => {
-  return await stripe.products.retrieve(productId);
-};
+  return await stripe.products.retrieve(productId)
+}
 
 // Validate that products exist.
 const productsExist = productList => {
-  const validProducts = ['increment', 'shirt', 'pins'];
+  const validProducts = ['increment', 'shirt', 'pins']
   return productList.data.reduce((accumulator, currentValue) => {
     return (
       accumulator &&
       productList.data.length === 3 &&
       validProducts.includes(currentValue.id)
-    );
-  }, !!productList.data.length);
-};
+    )
+  }, !!productList.data.length)
+}
+
+// Dynamically create a 3D Secure source.
+const dynamic3DS = async (source, order, req) => {
+  // Check if 3D Secure is required, or trigger it based on a custom rule (in this case, if the amount is above a threshold).
+  if (source.card.three_d_secure === 'required' || order.amount > 5000) {
+    source = await stripe.sources.create({
+      amount: order.amount,
+      currency: order.currency,
+      type: 'three_d_secure',
+      three_d_secure: {
+        card: source.id,
+      },
+      metadata: {
+        order: order.id,
+      },
+      redirect: {
+        return_url: req.headers.origin,
+      },
+    })
+  }
+  return source
+}
 
 module.exports = {
   createOrder,

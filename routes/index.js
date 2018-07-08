@@ -14,7 +14,7 @@ router.post('/signUpForEmails', controllers.newsletterController.signUpUser)
 
 // customer routes
 router.route('/customer/:email?')
-  .post(controllers.customerController.createCustomer)
+  .post(controllers.customerAuthController.authenticateSessionId, controllers.customerController.createCustomer)
   .get(controllers.customerAuthController.authenticateSessionId, controllers.customerController.getCustomers)
   .put(controllers.customerAuthController.authenticateSessionId, controllers.customerController.updateCustomer)
   .delete(controllers.customerAuthController.authenticateSessionId, controllers.customerController.deleteCustomer)

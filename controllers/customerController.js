@@ -16,8 +16,8 @@ module.exports = {
         delete customer.password
 
         // if the Customer wasn't created new, this will return the old, found Customer with matching email address
-        if (!didCreateNewCustomer) return res.status(200).json({ success: false, message: helper.strings.customerAlreadyExists, customer })
-        else return res.status(200).json({ success: true, message: helper.strings.customerCreatedSuccesfully, customer })
+        if (!didCreateNewCustomer) return res.status(200).json({ success: false, message: helper.strings.customerAlreadyExists, customer, sessionId: req.authToken })
+        else return res.status(200).json({ success: true, message: helper.strings.customerCreatedSuccesfully, customer, sessionId: req.authToken })
       })
       .catch(err => {
         helper.methods.handleErrors(err, res)
@@ -42,7 +42,7 @@ module.exports = {
         })
         return customer.save()
       })
-      .then(updatedCustomer => res.status(200).json({ success: true, message: helper.strings.customerUpdatedSuccesfully, customer: updatedCustomer }))
+      .then(updatedCustomer => res.status(200).json({ success: true, message: helper.strings.customerUpdatedSuccesfully, customer: updatedCustomer, sessionId: req.authToken }))
       .catch(err => {
         helper.methods.handleErrors(err, res)
       })

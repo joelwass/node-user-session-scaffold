@@ -34,6 +34,10 @@ module.exports = {
 
     // set the current order id
     req.currentOrderId = currentSession.orderId
+    redis[sessionId] = {
+      orderId: currentSession.orderId,
+      expiresAt: Date.now() + twoHoursInMilliseconds
+    }
     req.authToken = sessionId
     return next()
   },
