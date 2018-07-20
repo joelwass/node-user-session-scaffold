@@ -32,20 +32,9 @@ const pay = async (req, res, next) => {
     ) {
       return res.status(403).json({order, source})
     }
-    // Dynamically evaluate if 3D Secure should be used.
-    if (source && source.type === 'card' && source.livemode) {
-      // A 3D Secure source may be created referencing the card source.
-      source = await dynamic3DS(source, order, req)
-    }
-    // Demo: In test mode, replace the source with a test token so charges can work.
-    if (source.type === 'card' && !source.livemode) {
-      source.id = 'tok_visa'
-    }
-    console.log('')
-    console.log('new source')
-    console.log(source)
-    // Pay the order using the Stripe source.
-    if (source && source.status === 'chargeable') {
+
+    // check if the order isnt paid yet
+    if (order) {
       let charge, status
       try {
         charge = await stripe.charges.create(
@@ -66,8 +55,7 @@ const pay = async (req, res, next) => {
         // For the demo we simply set to failed.
         status = 'failed'
       }
-      console.log('')
-      console.log(charge)
+
       if (charge && charge.status === 'succeeded') {
         status = 'paid'
       } else if (charge) {
@@ -76,9 +64,29 @@ const pay = async (req, res, next) => {
         status = 'failed'
       }
       // Update the order with the charge status.
-      order = await orders.update(order.id, {metadata: {status}})
+      order = await updateOrder(order.id, {metadata: {status}})
     }
-    return res.status(200).json({order, source})
+    return res.status(200).json({ success: true, order })
+
+
+    // // Dynamically evaluate if 3D Secure should be used.
+    // if (source && source.type === 'card' && source.livemode) {
+    //   // A 3D Secure source may be created referencing the card source.
+    //   source = await dynamic3DS(source, order, req)
+    // }
+    // // Demo: In test mode, replace the source with a test token so charges can work.
+    // if (source.type === 'card' && !source.livemode) {
+    //   source.id = 'tok_visa'
+    // }
+    // console.log('')
+    // console.log('new source')
+    // console.log(source)
+    // // Pay the order using the Stripe source.
+    // if (source && source.status === 'chargeable') {
+      
+      
+    // }
+    
   } catch (err) {
     console.log(err)
     return res.status(500).json({error: err.message})
