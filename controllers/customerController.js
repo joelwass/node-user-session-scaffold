@@ -1,6 +1,9 @@
 const sqlModels = require('../models')
 const pluck = require('object-pluck')
 const helper = require('../helper')
+const config = require('../config')
+const stripe = require('stripe')(config.stripe.secretKey)
+stripe.setApiVersion(config.stripe.apiVersion)
 
 module.exports = {
   createCustomer: (req, res) => {
@@ -8,20 +11,35 @@ module.exports = {
     const params = pluck(['email', 'firstName', 'lastName', 'password'], req.body).end()
     if (Object.keys(params).length !== 4) return res.status(200).json({ success: false, message: helper.strings.invalidParameters })
 
-    return sqlModels.Customer.findOrCreate({ where: { email: params.email }, defaults: params })
-      .then(result => {
-        const didCreateNewCustomer = result[1]
-        const customer = result[0].toJSON()
-
-        delete customer.password
-
-        // if the Customer wasn't created new, this will return the old, found Customer with matching email address
-        if (!didCreateNewCustomer) return res.status(200).json({ success: false, message: helper.strings.customerAlreadyExists, customer, sessionId: req.authToken })
-        else return res.status(200).json({ success: true, message: helper.strings.customerCreatedSuccesfully, customer, sessionId: req.authToken })
+    // make stripe customer as well as our own
+    try {
+      stripe.customers.create({
+        email: params.email,
+        description: `Customer for ${params.firstName} ${params.lastName}`
+      }, function(err, customer) {
+        if (err) {
+          helper.methods.handleErrors(err, res)
+        } else {
+          params.stripeCustomerId = customer.id
+          return sqlModels.Customer.findOrCreate({ where: { email: params.email }, defaults: params })
+          .then(result => {
+            const didCreateNewCustomer = result[1]
+            const customer = result[0].toJSON()
+  
+            delete customer.password
+  
+            // if the Customer wasn't created new, this will return the old, found Customer with matching email address
+            if (!didCreateNewCustomer) return res.status(200).json({ success: false, message: helper.strings.customerAlreadyExists, customer, sessionId: req.authToken })
+            else return res.status(200).json({ success: true, message: helper.strings.customerCreatedSuccesfully, customer, sessionId: req.authToken })
+          })
+          .catch(err => {
+            helper.methods.handleErrors(err, res)
+          })
+        }
       })
-      .catch(err => {
-        helper.methods.handleErrors(err, res)
-      })
+    } catch (err) {
+      helper.methods.handleErrors(err, res)
+    }
   },
   updateCustomer: (req, res) => {
     // validate params, email is required but all else are optional

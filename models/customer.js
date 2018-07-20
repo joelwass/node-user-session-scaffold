@@ -17,6 +17,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       required: true
     },
+    stripeCustomerId: {
+      type: DataTypes.STRING
+    },
     firstName: {
       type: DataTypes.STRING,
       required: true

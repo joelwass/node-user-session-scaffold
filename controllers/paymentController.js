@@ -17,14 +17,18 @@ const stripe = require('stripe')(config.stripe.secretKey)
 stripe.setApiVersion(config.stripe.apiVersion)
 
 const pay = async (req, res, next) => {
-  let { source } = req.body
-  console.log(source)
+  let { source, email } = req.body
   try {
     // Retrieve the order associated to the ID.
     let order = await retrieveOrder(req.params.id)
+    let stripeCustomerId = await retrieveCustomerId(email)
+    console.log(stripeCustomerId)
     console.log('')
     console.log('order')
     console.log(order)
+    // add source to stripe customer
+    console.log(source)
+    await stripe.customers.update(stripeCustomerId, { source: source.id })
     // Verify that this order actually needs to be paid.
     if (
       order.metadata.status === 'pending' ||
@@ -39,10 +43,10 @@ const pay = async (req, res, next) => {
       try {
         charge = await stripe.charges.create(
           {
-            source: source.id,
             amount: order.amount,
             currency: order.currency,
             receipt_email: order.email,
+            customer: stripeCustomerId
           },
           {
             // Set a unique idempotency key based on the order ID.
@@ -51,6 +55,7 @@ const pay = async (req, res, next) => {
           }
         )
       } catch (err) {
+        console.log(err)
         // This is where you handle declines and errors.
         // For the demo we simply set to failed.
         status = 'failed'
@@ -66,27 +71,7 @@ const pay = async (req, res, next) => {
       // Update the order with the charge status.
       order = await updateOrder(order.id, {metadata: {status}})
     }
-    return res.status(200).json({ success: true, order })
-
-
-    // // Dynamically evaluate if 3D Secure should be used.
-    // if (source && source.type === 'card' && source.livemode) {
-    //   // A 3D Secure source may be created referencing the card source.
-    //   source = await dynamic3DS(source, order, req)
-    // }
-    // // Demo: In test mode, replace the source with a test token so charges can work.
-    // if (source.type === 'card' && !source.livemode) {
-    //   source.id = 'tok_visa'
-    // }
-    // console.log('')
-    // console.log('new source')
-    // console.log(source)
-    // // Pay the order using the Stripe source.
-    // if (source && source.status === 'chargeable') {
-      
-      
-    // }
-    
+    return res.status(200).json({ success: true, order }) 
   } catch (err) {
     console.log(err)
     return res.status(500).json({error: err.message})
@@ -127,6 +112,15 @@ const updateOrder = async (orderId, properties) => {
 // List all products.
 const listProducts = async () => {
   return await stripe.products.list({limit: 3, type: 'good'})
+}
+
+// find customer
+const retrieveCustomerId = async (email) => {
+  const customer = await sqlModels.Customer.findOne({ where: { email: email } })
+  if (customer && customer.stripeCustomerId) {
+    return customer.stripeCustomerId
+  }
+  return undefined
 }
 
 // Retrieve a product by ID.
