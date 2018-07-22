@@ -53,9 +53,6 @@ module.exports = {
    
     req.authToken = sessionId
 
-    console.log('')
-    console.log(redis[sessionId])
-    console.log('')
     return next()
   },
   createAuth: (req, res) => {
@@ -129,17 +126,12 @@ module.exports = {
     return res.status(200).json({ success: true })
   },
   resume: (req, res) => {
-    console.log('trying to resume')
-    console.log(req.get('Auth'))
-    console.log(req.authToken)
     const oldSession = redis[req.authToken]
-    console.log('old session', oldSession)
     if (!oldSession.user) {
       return res.status(200).json({ success: true })
     }
     sqlModels.Customer.findById(oldSession.user.id)
       .then(authenticatedUser => {
-        console.log('did it find?', authenticatedUser)
         if (authenticatedUser) {
           // generate a fresh session id for them
           const sessionId = ulid()
