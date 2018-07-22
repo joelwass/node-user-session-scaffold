@@ -24,6 +24,9 @@ router.post('/user/login', controllers.adminUserAuthController.loginUser)
 router.post('/user/logout', controllers.adminUserAuthController.logoutUser)
 router.post('/user/resume', controllers.adminUserAuthController.authenticateSessionId, controllers.adminUserAuthController.resume)
 
+// resume and save
+router.post('/save', controllers.customerAuthController.authenticateSessionId, (req, res) => res.status(200).json({ success: true }))
+
 // customer auth
 router.post('/customer/ux/login', controllers.customerAuthController.loginUser)
 router.post('/customer/ux/logout', controllers.customerAuthController.logoutUser)
@@ -43,7 +46,7 @@ router.route('/order/:id?')
   .get(controllers.customerAuthController.authenticateSessionId, controllers.orderController.getOrders)
   .delete(controllers.customerAuthController.authenticateSessionId, controllers.orderController.deleteOrder)
 
-router.post('/order/resume', controllers.customerAuthController.authenticateSessionId, controllers.customerAuthController.resume)
+router.get('/resume', controllers.customerAuthController.authenticateSessionId, controllers.customerAuthController.resume)
 
 // user routes
 router.route('/user/:email?')

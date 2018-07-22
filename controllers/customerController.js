@@ -60,7 +60,30 @@ module.exports = {
         })
         return customer.save()
       })
-      .then(updatedCustomer => res.status(200).json({ success: true, message: helper.strings.customerUpdatedSuccesfully, customer: updatedCustomer, sessionId: req.authToken }))
+      .then(updatedCustomer => {
+        try {
+          stripe.customers.update(updatedCustomer.stripeCustomerId, {
+            email: params.email,
+            metadata: {
+              firstName: updatedCustomer.firstName,
+              lastName: updatedCustomer.lastName,
+              address: params.address,
+              address2: params.address2,
+              city: params.city,
+              state: params.state,
+              zip: params.zip
+            }
+          }, function(err) {
+            if (err) {
+              helper.methods.handleErrors(err, res)
+            } else {
+              return res.status(200).json({ success: true, message: helper.strings.customerUpdatedSuccesfully, customer: updatedCustomer, sessionId: req.authToken })
+            }
+          })
+        } catch (err) {
+          helper.methods.handleErrors(err, res)
+        }
+      })
       .catch(err => {
         helper.methods.handleErrors(err, res)
       })

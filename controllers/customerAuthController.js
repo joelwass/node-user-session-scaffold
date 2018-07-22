@@ -11,7 +11,11 @@ const twoHoursInMilliseconds = 7200000
   SESSION:
   [sessionId]: {
     expiresAt: unixTimeStamp + 2 hours,
-    orderId: user id of the user logged in
+    orderId: user id of the user logged in,
+    browsingProduct: the current browsing product,
+    checkoutStep: the current checkout step the user is on,
+    selectedProducts: the current shopping bag contents,
+    user: the users info
   }
 
 */
@@ -32,13 +36,26 @@ module.exports = {
       return res.status(401).json({ success: false, message: helper.strings.expiredSessionId })
     }
 
-    // set the current order id
-    req.currentOrderId = currentSession.orderId
-    redis[sessionId] = {
-      orderId: currentSession.orderId,
-      expiresAt: Date.now() + twoHoursInMilliseconds
+     // set the current order id
+     req.currentOrderId = currentSession.orderId
+
+    // set the various state stuff if it was passed down
+    if (req.body) {
+      const params = pluck(['selectedProducts', 'checkoutStep', 'user', 'browsingProduct'], req.body).end()
+      if (params.selectedProducts) redis[sessionId].selectedProducts = params.selectedProducts
+      if (params.checkoutStep) redis[sessionId].checkoutStep = params.checkoutStep
+      if (params.browsingProduct) redis[sessionId].browsingProduct = params.browsingProduct
+      if (params.user) redis[sessionId].user = params.user
     }
+    
+    redis[sessionId].orderId = currentSession.orderId
+    redis[sessionId].expiresAt = Date.now() + twoHoursInMilliseconds
+   
     req.authToken = sessionId
+
+    console.log('')
+    console.log(redis[sessionId])
+    console.log('')
     return next()
   },
   createAuth: (req, res) => {
@@ -50,7 +67,11 @@ module.exports = {
         // declare customer session
         redis[sessionId] = {
           orderId: newOrder.id,
-          expiresAt: Date.now() + twoHoursInMilliseconds
+          expiresAt: Date.now() + twoHoursInMilliseconds,
+          checkoutStep: undefined,
+          browsingProduct: undefined,
+          user: undefined,
+          selectedProducts: undefined
         }
 
         // return order id
@@ -65,6 +86,8 @@ module.exports = {
     const params = pluck(['email', 'password'], req.body).end()
     if (Object.keys(params).length !== 2) return res.status(200).json({ success: false, message: helper.strings.invalidParameters })
 
+    const oldSession = redis[req.get('Auth')]
+
     sqlModels.Customer.findOne({ where: { email: params.email }})
       .then(user => {
         if (!user) return res.status(200).json({ success: false, message: helper.strings.noUserExistingByThatEmail })
@@ -76,7 +99,11 @@ module.exports = {
             // declare users session
             redis[sessionId] = {
               userId: authenticatedUser.id,
-              expiresAt: Date.now() + twoHoursInMilliseconds
+              expiresAt: Date.now() + twoHoursInMilliseconds,
+              browsingProduct: oldSession.browsingProduct,
+              selectedProducts: oldSession.selectedProducts,
+              user: oldSession.user,
+              checkoutStep: oldSession.checkoutStep
             }
 
             const jsonUser = authenticatedUser.toJSON()
@@ -102,26 +129,32 @@ module.exports = {
     return res.status(200).json({ success: true })
   },
   resume: (req, res) => {
-    const userId = redis[req.authToken].userId
-    sqlModels.Customer.findById(userId)
+    const oldSession = redis[req.authToken]
+    sqlModels.Customer.findById(oldSession.userId)
       .then(authenticatedUser => {
-        // generate a fresh session id for them
-        const sessionId = ulid()
-        // save user session
-        redis[sessionId] = {
-          userId: authenticatedUser.id,
-          expiresAt: Date.now() + twoHoursInMilliseconds
+        if (authenticatedUser) {
+          // generate a fresh session id for them
+          const sessionId = ulid()
+          // save user session
+          redis[sessionId] = {
+            userId: authenticatedUser.id,
+            expiresAt: Date.now() + twoHoursInMilliseconds,
+            browsingProduct: oldSession.browsingProduct,
+            selectedProducts: oldSession.selectedProducts,
+            user: oldSession.user,
+            checkoutStep: oldSession.checkoutStep
+          }
+          // delete the old session
+          delete redis[req.authToken]
         }
-        // delete the old session
-        delete redis[req.authToken]
 
-        const jsonUser = authenticatedUser.toJSON()
+        const jsonUser = authenticatedUser ? authenticatedUser.toJSON() : {}
         delete jsonUser.password
         delete jsonUser.createdAt
         delete jsonUser.updatedAt
 
         // return session id
-        return res.status(200).json({ success: true, sessionId, user: jsonUser })
+        return res.status(200).json({ success: true, user: jsonUser, browsingProduct: oldSession.browsingProduct, selectedProducts: oldSession.selectedProducts, checkoutStep: oldSession.checkoutStep })
       })
       .catch(err => {
         helper.methods.handleErrors(err, res)
