@@ -55,7 +55,7 @@ const pay = async (req, res, next) => {
           }
         )
       } catch (err) {
-        console.log(err)
+        console.log('error', err)
         // This is where you handle declines and errors.
         // For the demo we simply set to failed.
         status = 'failed'
@@ -73,7 +73,7 @@ const pay = async (req, res, next) => {
     }
     return res.status(200).json({ success: true, order }) 
   } catch (err) {
-    console.log(err)
+    console.log(' catch err', err)
     return res.status(500).json({error: err.message})
   }
 }
