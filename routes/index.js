@@ -79,14 +79,7 @@ router.get('/stripe/orders/:id', async (req, res) => {
 // Retrieve all products.
 router.get('/stripe/products', async (req, res) => {
   const productList = await controllers.paymentController.listProducts()
-  // Check if products exist on Stripe Account.
-  // if (controllers.paymentController.productsExist(productList)) {
-    res.status(200).json({ success: true, products: productList })
-  // } else {
-    // We need to set up the products.
-    // await setup.run()
-    // res.json(await controllers.paymentController.listProducts())
-  // }
+  res.status(200).json({ success: true, products: productList })
 });
 
 // Retrieve a product by ID.

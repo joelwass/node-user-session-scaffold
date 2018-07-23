@@ -50,7 +50,7 @@ module.exports = {
     
     redis[sessionId].orderId = currentSession.orderId
     redis[sessionId].expiresAt = Date.now() + twoHoursInMilliseconds
-   
+
     req.authToken = sessionId
 
     return next()
@@ -128,7 +128,7 @@ module.exports = {
   resume: (req, res) => {
     const oldSession = redis[req.authToken]
     if (!oldSession.user) {
-      return res.status(200).json({ success: true })
+      return res.status(200).json({ success: true, browsingProduct: oldSession.browsingProduct, selectedProducts: oldSession.selectedProducts, checkoutStep: oldSession.checkoutStep })
     }
     sqlModels.Customer.findById(oldSession.user.id)
       .then(authenticatedUser => {
