@@ -23,15 +23,4 @@ module.exports = {
   passwordInvalid: 'Username or password was incorrect',
   unauthorizedRequest: 'Invalid auth token sent down',
   expiredSessionId: 'Auth token has expired',
-
-  // product
-  productAlreadyExists: 'Product already exists with that name and color',
-  productCreatedSuccesfully: 'Product created successfully',
-  noProductExistsWithNameAndColor: 'No product exists with that name and color',
-  productUpdatedSuccesfully: 'Product updated successfully',
-  productSuccessfullyDeleted: 'Product deleted successfully',
-
-  // order
-  OrderCreatedSuccesfully: 'Order created successfully',
-  noOrderExistsWithThatId: 'No order exists with that id'
 }
